@@ -237,6 +237,7 @@ static int dowork( const char* infilename, const char* outfilename)
 }
 
 #ifdef USEWIN32GUI
+int main( int argc, char **argv );
 static int openfile_gui(char* argv0)
 {
 	OPENFILENAME ofn;
