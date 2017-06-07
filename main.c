@@ -100,6 +100,38 @@ static void readfile( const char* filename, BYTE** ppData, size_t* pDataSize )
 	if (pDataSize != NULL ) *pDataSize = (size_t)filesize;
 }
 
+
+static void write_summary(FILE* fp, const summary_t* summary, const char* summary_name )
+{
+	fprintf(fp, "\n%s:\n"
+			"上： %lu\n"
+			"下： %lu\n"
+			"左： %lu\n"
+			"右： %lu\n"
+			"射： %lu\n"
+			"榴： %lu\n"
+			"低： %lu\n"
+			"停： %lu\n"
+		, summary_name
+		, summary->up
+		, summary->down
+		, summary->left
+		, summary->right
+		, summary->shoot
+		, summary->bomb
+		, summary->slow
+		, summary->pause);
+}
+
+// 检查结束标记，没有的话报错退出。
+static void check_endmark( const th143keystate_t* pKeyState, DWORD keystate_size )
+{
+	const th143keystate_t* pEndMark = (th143keystate_t*)(pKeyState+keystate_size-1);
+	if ( pEndMark->d != 0xffff || pEndMark->u1 != 0xffff || pEndMark->u2 != 0xffff ) {
+		error("No END mark!\n");
+	}
+}
+
 /* Exit program immediately on failure */
 static void writefile( const char* filename, BYTE* pRawData, size_t raw_size, const char* rawfilename)
 {
@@ -113,25 +145,16 @@ static void writefile( const char* filename, BYTE* pRawData, size_t raw_size, co
 		DWORD keystate_size = *(DWORD*)(pRawData+0xac);
 		// 按键状态数据从 0x1b4 开始。
 		const th143keystate_t* pKeyState = (th143keystate_t*)(pRawData+0x1b4);
-
-		fprintf(stderr, "按键数据长度（包括结束标记）：%lu 帧(%lu 字节)\n",
+		fprintf(stderr, "keystate data size(include END mark)：%lu frames(%lu bytes)\n",
 				keystate_size, keystate_size * (sizeof(th143keystate_t)));
-
-		// 检查结束标记，没有的话报错退出。
-		{
-			const th143keystate_t* pEndMark = (th143keystate_t*)(pKeyState+keystate_size-1);
-			if ( pEndMark->d != 0xffff || pEndMark->u1 != 0xffff || pEndMark->u2 != 0xffff ) {
-				error("没有结束标记\n");
-			}
-		}
+		check_endmark(pKeyState, keystate_size);
 
 		keystate_size--; // 接下来的处理忽略最后的结束标记
 
 		// 输出
 		fprintf(fp, "文件名： %s\n", rawfilename); 
 		fprintf(fp, "机签： %s\n", pRawData);
-		fprintf(fp, "关卡： %d(场景: %d-%d)\n", *(int*)(pRawData+0x90),
-				*(int*)(pRawData+0x88)+1, *(int*)(pRawData+0x8c)+1 );
+		fprintf(fp, "关卡： %d(场景: %d-%d)\n", *(int*)(pRawData+0x90), *(int*)(pRawData+0x88)+1, *(int*)(pRawData+0x8c)+1 );
 		fprintf(fp, "处理落率： %f%%\n", *(float*)(pRawData+0x7c));
 		fprintf(fp, "按键数据长度：%lu 帧(%lu 字节)\n\n", keystate_size, keystate_size * (sizeof(th143keystate_t)));
 
@@ -191,25 +214,9 @@ static void writefile( const char* filename, BYTE* pRawData, size_t raw_size, co
 			// 		pKeyState[i].d, pKeyState[i].u1, pKeyState[i].u2);
 			fprintf(fp, "-------------------------------------------\n");
 
-			fprintf(fp, "\n每个按键按下的总帧数:\n");
-			fprintf(fp, "上： %ld\n", all.up);
-			fprintf(fp, "下： %ld\n", all.down);
-			fprintf(fp, "左： %ld\n", all.left);
-			fprintf(fp, "右： %ld\n", all.right);
-			fprintf(fp, "射： %ld\n", all.shoot);
-			fprintf(fp, "榴： %ld\n", all.bomb);
-			fprintf(fp, "低： %ld\n", all.slow);
-			fprintf(fp, "停： %ld\n", all.pause);
-
-			fprintf(fp, "\n每个按键的总按键次数:\n");
-			fprintf(fp, "上： %ld\n", press.up);
-			fprintf(fp, "下： %ld\n", press.down);
-			fprintf(fp, "左： %ld\n", press.left);
-			fprintf(fp, "右： %ld\n", press.right);
-			fprintf(fp, "射： %ld\n", press.shoot);
-			fprintf(fp, "榴： %ld\n", press.bomb);
-			fprintf(fp, "低： %ld\n", press.slow);
-			fprintf(fp, "停： %ld\n", press.pause);
+			// write summary
+			write_summary(fp, &all, "每个按键按下的总帧数");
+			write_summary(fp, &press, "每个按键的总按键次数");
 		}
 
 		fclose(fp);
@@ -282,7 +289,7 @@ static int openfile_gui(char* argv0)
 
 int main( int argc, char **argv )
 {
-	assert( (printf("sizeof(th143keystate_t) == %u\n", sizeof(th143keystate_t)), sizeof(th143keystate_t) == 6) );
+	assert( (printf("sizeof(th143keystate_t) == %lu\n", sizeof(th143keystate_t)), sizeof(th143keystate_t) == 6) );
 
 	switch ( argc ) {
 		case 2:
