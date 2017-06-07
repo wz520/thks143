@@ -19,13 +19,17 @@
 
 随便建一个控制台工程，把 `main.c` 和 `common.h` 拖进去，直接编译。
 
-### Windows mingw32/x86_64-w64-mingw32
+或者在工程目录下使用命令行（假设 cl.exe 已在 \$PATH 中）：
 
-运行 Makefile 文件，即运行 `mingw32-make`。
+	cl /O2 /Fethks143.exe main.c
+
+### Windows TDM-GCC/mingw32/x86_64-w64-mingw32
+
+运行 mingw32.mak 文件。即运行 `mingw32-make -f mingw32.mak`。
 
 ### Linux GCC
 
-打开 Makefile 文件，删除以 `LIBS=` 和 `RM=` 开头的两行。然后运行 Makefile 文件，即运行 `make`。
+运行 Makefile 文件。即运行 `make`。
 
 
 
