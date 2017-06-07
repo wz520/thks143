@@ -7,6 +7,7 @@ typedef int BOOL;
 #if defined(_WIN32) || defined(WIN32)
 typedef unsigned long  DWORD; // Using Windows standard
 #elif defined(__UINT32_TYPE__)
+# include <stdint.h>
 typedef uint32_t  DWORD;
 #elif defined(__SIZEOF_LONG__) && __SIZEOF_LONG__ != 4
 typedef unsigned int  DWORD;

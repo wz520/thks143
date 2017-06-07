@@ -1,6 +1,16 @@
 *.*~
+*~
+*.swp
 *.bin
 *.txt
 *.rpy
 *.exe
 *.o
+*.obj
+
+thks143
+tags
+
+Release/
+Debug/
+
